@@ -1,17 +1,16 @@
 'use strict';
 
-const amqp = require('amqplib/callback_api');
+const helpers = require('./lib/helpers');
 const config = require('./config');
 
-amqp.connect(config.amqp.url, (err, conn) => {
-  conn.createChannel((err, ch) => {
-    const q = config.amqp.queueName;
+const q = config.amqp.queueName;
 
-    ch.assertQueue(q, { durable: false });
-    console.log(" [*] Waiting for messages in %s. To exit press CTRL+C", q);
-
-    ch.consume(q, (msg) => {
+helpers.getAmqpChannel()
+  .then((channel) => {
+    channel.assertQueue(q, { durable: false });
+    console.log(" [*] Waiting for messages in %s.", q);
+    channel.consume(q, (msg) => {
       console.log(" [x] Received %s", msg.content.toString());
     });
-  });
-});
+  })
+  .catch(err => console.log(err));

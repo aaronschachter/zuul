@@ -3,15 +3,14 @@
 const express = require('express');
 const bodyParser = require('body-parser')
 const path = require('path');
-const amqp = require('amqplib/callback_api');
+const helpers = require('./lib/helpers');
 const config = require('./config');
 
 let channel;
-const queueName = config.amqp.queueName;
 
 function enqueue(data) {
   const msg = JSON.stringify(data);
-  channel.sendToQueue(queueName, new Buffer.from(msg));
+  channel.sendToQueue(config.amqp.queueName, new Buffer.from(msg));
   console.log(" [x] Sent %s", msg);
 }
 
@@ -28,11 +27,10 @@ app.post('/', function(req, res) {
   res.sendFile(path.join(__dirname + '/assets/success.html'));
 });
 
-amqp.connect(config.amqp.url, (err, conn) => {
-  conn.createChannel((err, ch) => {
+helpers.getAmqpChannel()
+  .then((ch) => {
     channel = ch;
-    channel.assertQueue(queueName, { durable: false });
     app.listen(8080);
     console.log('starting webserver');
-  });
-});
+  })
+  .catch(err => console.log(err));
