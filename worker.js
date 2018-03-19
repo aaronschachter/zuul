@@ -10,7 +10,10 @@ helpers.getAmqpChannel()
     channel.assertQueue(q, { durable: false });
     console.log(" [*] Waiting for messages in %s.", q);
     channel.consume(q, (msg) => {
-      console.log(" [x] Received %s", msg.content.toString());
+      if (msg !== null) {
+        console.log(" [x] Received %s", msg.content.toString());
+        channel.ack(msg);
+      }
     });
   })
   .catch(err => console.log(err));
